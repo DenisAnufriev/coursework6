@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="container">
+      <div class="row text-center">
+
+        <div class="col-6">
+
+                <div class="card-body">
+                    <div class="card-header">
+                        <h6 class="display-6">Получатель:</h6>
+                    </div>
+
+                    <ul class="list-unstyled mt-3 mb-4 text-start m-3">
+                        <li>
+                            {% if object.name != None %}
+                            Имя: {{ object.name }}
+                            {% else %}
+                            Имя: не указано
+                            {% endif %}
+                        </li>
+                        <li>Почта: {{ object.email_client}}</li>
+                    </ul>
+                    <a class="btn btn-warning" href="{% url 'mailing:client_edit' object.pk %}" role="button">Изменить</a>
+                    <a class="btn btn-danger" href="{% url 'mailing:client_delete' object.pk %}" role="button">Удалить</a>
+                    <a class="btn btn-primary" href="{% url 'mailing:client_list' %}" role="button">Назад</a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+
+
+
+{% endblock %}

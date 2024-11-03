@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container">
+    <a class="btn btn-outline-primary" href="{% url 'mailing:letter_create' %}">Создать письмо</a>
+</div>
+<br>
+<div class="container">
+      <div class="row text-center">
+      {% for object in object_list %}
+        <div class="col-3">
+            <div class="card mb-4 box-shadow">
+                <div class="card-header">
+                    {{ object.title }}
+                </div>
+                <div class="card-body">
+                    <a class="btn btn-primary" href="{% url 'mailing:letter_view' object.pk %}" role="button">Посмотреть</a>
+                    <a class="btn btn-warning" href="{% url 'mailing:letter_edit' object.pk %}" role="button">Изменить</a>
+                    <a class="btn btn-danger" href="{% url 'mailing:letter_delete' object.pk %}" role="button">Удалить</a>
+                </div>
+            </div>
+        </div>
+      {% endfor %}
+    </div>
+</div>
+
+{% endblock %}
