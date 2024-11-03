@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="container">
+    <div class="row text-center">
+        <div class="col-6">
+            <div class="card-body">
+                <div class="card-header">
+                    <h6 class="display-6">{{ object.title }}</h6>
+                </div>
+
+                <ul class="list-unstyled mt-3 mb-4 text-start m-3">
+                    <li>
+                        Тема рассылки: {{ object.message.title }}
+                    </li>
+                    <li>
+                        Содержимое: {{ object.message.body|truncatechars:20 }}
+                    </li>
+                    {% if object.clients.all %}
+                    <ul class="grey-text text-darken-3">
+                        {% for client in object.clients.all %}
+                        <li>{{ client.email_client }} ({{ client.full_name }})</li>
+                        {% endfor %}
+                    </ul>
+                    {% else %}
+                    <p class="grey-text text-darken-3">Нет выбранных клиентов для этой рассылки.</p>
+                    {% endif %}
+                </ul>
+                <a class="btn btn-warning" href="{% url 'mailing:mailing_edit' object.pk %}" role="button">Изменить</a>
+                <a class="btn btn-danger" href="{% url 'mailing:mailing_delete' object.pk %}" role="button">Удалить</a>
+                <a class="btn btn-primary" href="{% url 'mailing:mailing_list' %}" role="button">Назад</a>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+
+{% endblock %}

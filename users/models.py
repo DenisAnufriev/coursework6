@@ -1,3 +1,4 @@
+from django.contrib.auth.hashers import make_password
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
@@ -11,6 +12,12 @@ class User(AbstractUser):
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []
+
+    def save(self, *args, **kwargs):
+        if 'pbkdf2_sha256' not in self.password:
+            password = make_password(self.password)
+            self.password = password
+        super().save(*args, **kwargs)
 
     class Meta:
         verbose_name = "Пользователь"

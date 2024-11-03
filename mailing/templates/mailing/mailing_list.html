@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container">
+    <div class="col">
+        <div class="card mb-4 rounded-3 shadow-sm border-primary">
+            <div class="card-header py-3 text-white bg-primary border-primary">
+                <h4 class="my-0 fw-normal">Статистика</h4>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled mt-3 mb-4">
+                    <li>Посмотреть статистику</li>
+                    <li>отправки писем</li>
+                </ul>
+                <button type="button" href="{% url 'mailing:client_list' %}" class="w-100 btn btn-lg btn-primary">
+                    Посмотреть
+                </button>
+            </div>
+        </div>
+    </div>
+    <a class="btn btn-outline-primary" href="{% url 'mailing:mailing_create' %}">Создать рассылку</a>
+</div>
+<br>
+<div class="container">
+    <div class="row text-center">
+        {% for object in object_list %}
+        <div class="col-3">
+            <div class="card mb-6 box-shadow">
+
+                <div class="card-header">
+                    Рассылка №{{ object.id }} - {{ object.message.title }}
+                </div>
+                <p>
+                    <strong>Дата и время создания:</strong> {{ object.created_at|date:"d.m.Y H:i" }}<br>
+                    <strong>Дата и время следующей
+                        отправки:</strong> {{ object.send_time|date:"d.m.Y H:i" }}<br>
+                    <strong>Периодичность:</strong>
+                    <br>{{ object.get_frequency_display }}<br>
+                    <strong>Клиентов:</strong> {{ object.clients.count }}
+                </p>
+                <div class="card-body">
+                    <a class="btn btn-primary" href="{% url 'mailing:mailing_view' object.pk %}" role="button">Посмотреть</a>
+                    <a class="btn btn-warning" href="{% url 'mailing:mailing_edit' object.pk %}"
+                       role="button">Изменить</a>
+                    <a class="btn btn-danger" href="{% url 'mailing:mailing_delete' object.pk %}"
+                       role="button">Удалить</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+{% endblock %}

@@ -12,10 +12,10 @@
                 <div class="card-header">
                     {{ object.email_client }}
                     <br>
-                    {% if object.name != None %}
-                        Имя: {{ object.name }}
+                    {% if object.full_name != None %}
+                        ФИО: {{ object.full_name }}
                     {% else %}
-                        Имя: не указано
+                        ФИО: не указано
                      {% endif %}
 
                 </div>
