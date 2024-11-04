@@ -1,9 +1,9 @@
-from mailing.models import Mailing, MailingJob
-from django.utils import timezone
-from datetime import timedelta
-import smtplib
-from django.core.mail import send_mail
-from django.conf import settings
+# from mailing.models import Mailing, MailingAttempt
+# from django.utils import timezone
+# from datetime import timedelta
+# import smtplib
+# from django.core.mail import send_mail
+# from django.conf import settings
 
 
 def check_and_send_mailings():
@@ -22,8 +22,8 @@ def check_and_send_mailings():
 def can_send_mailing(mailing: Mailing) -> bool:
     # Проверяем последнюю попытку отправки
     last_attempt = (
-        MailingJob.objects.filter(
-            mailing=mailing, status=MailingJob.Status.SUCCESS
+        MailingAttempt.objects.filter(
+            mailing=mailing, status=MailingAttempt.Status.SUCCESS
         )
         .order_by("-attempt_time")
         .first()
@@ -48,7 +48,7 @@ def send_mailing(mailing: Mailing):
     clients = mailing.clients.all()
     emails = [client.email_client for client in clients]  # Исправлено на email_client
 
-    attempt_status = MailingJob.Status.SUCCESS
+    attempt_status = MailingAttempt.Status.SUCCESS
     server_response = None
 
     try:
@@ -73,11 +73,11 @@ def send_mailing(mailing: Mailing):
     except smtplib.SMTPException as error:
         mailing.is_active = False
         mailing.save()
-        attempt_status = MailingJob.Status.FAILED
+        attempt_status = MailingAttempt.Status.FAILED
         server_response = str(error)
 
     finally:
-        MailingJob.objects.create(
+        MailingAttempt.objects.create(
             mailing=mailing, status=attempt_status, server_response=server_response
         )
 

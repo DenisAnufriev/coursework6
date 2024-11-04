@@ -1,5 +1,5 @@
 from django.db import models
-from django.utils import timezone
+
 
 from users.models import User
 
@@ -11,12 +11,14 @@ class Client(models.Model):
         max_length=100,
         verbose_name="ФИО",
         help_text="при наличии",
-        **NULLABLE,
     )
     email_client = models.EmailField(
         verbose_name="электронная почта",
         help_text="обязательно",
         unique=True,
+    )
+    comment = models.TextField(
+        verbose_name="Комментарий", help_text="Добавьте комментарий", **NULLABLE
     )
     owner = models.ForeignKey(
         User,
@@ -36,15 +38,20 @@ class Client(models.Model):
 
 class Letter(models.Model):
     title = models.CharField(
-        max_length=150,
-        verbose_name="Тема письма",
+        max_length=100,
+        default="Рассылка",
+        verbose_name="Заголовок",
+        help_text="Введите заголовок",
     )
-    body = models.TextField(verbose_name="содержимое")
+    message = models.TextField(verbose_name="Сообщение", help_text="Введите текс")
+    created_at = models.DateTimeField(verbose_name="Дата создания", auto_now_add=True)
+    update_at = models.DateTimeField(verbose_name="Дата изменения", auto_now=True)
     owner = models.ForeignKey(
         User,
-        on_delete=models.SET_NULL,
         **NULLABLE,
-        verbose_name="владелец сообщения",
+        verbose_name="Владелец",
+        help_text="Введите владельца",
+        on_delete=models.SET_NULL,
     )
 
     def __str__(self):
@@ -89,6 +96,7 @@ class Mailing(models.Model):
         on_delete=models.PROTECT,
         related_name="mailings",
         verbose_name="сообщения",
+        **NULLABLE,
     )
     clients = models.ManyToManyField(
         Client,
@@ -115,39 +123,33 @@ class Mailing(models.Model):
         ]
 
 
-class MailingJob(models.Model):
+class MailingAttempt(models.Model):
+    """Представляет собой попытку отправить почтовое сообщение."""
+
     class Status(models.TextChoices):
         SUCCESS = "SC", "Успешно"
         FAILED = "FL", "Неуспешно"
 
-    id = models.AutoField(primary_key=True)
     mailing = models.ForeignKey(
-        Mailing, on_delete=models.CASCADE, related_name='jobs', verbose_name='рассылка'
-    )
-    job_id = models.CharField(max_length=255, unique=True)
-    next_run_time = models.DateTimeField(**NULLABLE)
-    trigger = models.CharField(max_length=50)
-    args = models.JSONField(**NULLABLE)
-    kwargs = models.JSONField(**NULLABLE)
-    job_state = models.JSONField(**NULLABLE)
-    status = models.CharField(
-        max_length=2,
-        choices=Status.choices,
-        default=Status.SUCCESS,
-        verbose_name="статус попытки"
+        Mailing,
+        on_delete=models.CASCADE,
+        related_name="attempts",
+        verbose_name="рассылка",
     )
     attempt_time = models.DateTimeField(
-        auto_now_add=True,
-        verbose_name="время попытки"
+        auto_now_add=True, verbose_name="дата и время попытки отправки"
+    )
+    status = models.CharField(
+        max_length=2, choices=Status.choices, verbose_name="статус попытки"
     )
     server_response = models.TextField(
         verbose_name="ответ почтового сервера", **NULLABLE
     )
 
     def __str__(self):
-        return f"Job for '{self.mailing}' with ID: {self.job_id}"
+        return f"Рассылка: {self.attempt_time} статус {self.get_status_display()}"
 
     class Meta:
         verbose_name = "попытка рассылки"
         verbose_name_plural = "попытки рассылок"
-        ordering = ["-mailing"]
+        ordering = ["-attempt_time"]

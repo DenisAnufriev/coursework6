@@ -17,7 +17,7 @@
                     </li>
                     <li>Содержимое: {{ object.body }}</li>
                 </ul>
-                <a class="btn btn-warning" href="{% url 'mailing:letter_edit' object.pk %}" role="button">Изменить</a>
+                <a class="btn btn-warning" href="{% url 'mailing:letter_update' object.pk %}" role="button">Изменить</a>
                 <a class="btn btn-danger" href="{% url 'mailing:letter_delete' object.pk %}" role="button">Удалить</a>
                 <a class="btn btn-primary" href="{% url 'mailing:letter_list' %}" role="button">Назад</a>
             </div>

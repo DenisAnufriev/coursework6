@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <h1 class="display-4">Попытки рассылок</h1>
+    <div class="row">
+        {% for attempt in mailing_attempts %}
+        <div class="col">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Попытка №{{ attempt.id }}</h5>
+                    <p class="card-text">Статус: {{ attempt.get_status_display }}</p>
+                    <a href="{% url 'mailing:mailing_attempt_detail' attempt.id %}" class="btn btn-primary">Подробнее</a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <p>Нет попыток рассылок.</p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

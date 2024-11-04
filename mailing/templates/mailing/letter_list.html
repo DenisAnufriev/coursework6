@@ -13,8 +13,8 @@
                     {{ object.title }}
                 </div>
                 <div class="card-body">
-                    <a class="btn btn-primary" href="{% url 'mailing:letter_view' object.pk %}" role="button">Посмотреть</a>
-                    <a class="btn btn-warning" href="{% url 'mailing:letter_edit' object.pk %}" role="button">Изменить</a>
+                    <a class="btn btn-primary" href="{% url 'mailing:letter_detail' object.pk %}" role="button">Посмотреть</a>
+                    <a class="btn btn-warning" href="{% url 'mailing:letter_update' object.pk %}" role="button">Изменить</a>
                     <a class="btn btn-danger" href="{% url 'mailing:letter_delete' object.pk %}" role="button">Удалить</a>
                 </div>
             </div>

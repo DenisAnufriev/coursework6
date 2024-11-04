@@ -1,15 +1,11 @@
-import json
-
 from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
-from django.http import JsonResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse_lazy, reverse
-from django.views import View
 from django.views.generic import CreateView, UpdateView, ListView, DetailView, DeleteView
 
 from mailing.forms import ClientForm, MailingForm, LetterForm
-from mailing.models import Client, Letter, Mailing
+from mailing.models import Client, Letter, Mailing, MailingAttempt
 
 
 @login_required
@@ -38,8 +34,10 @@ class ClientListView(LoginRequiredMixin, ListView):
     model = Client
 
 
-class ClientDetailView(LoginRequiredMixin, DetailView):
+class ClientDetailView(LoginRequiredMixin, PermissionRequiredMixin, DetailView):
     model = Client
+    permission_required = 'mailing.view_client'
+    success_url = reverse_lazy('mailing:client_detail')
 
 
 class ClientDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
@@ -65,8 +63,6 @@ class LetterUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
 
     def get_success_url(self):
         return reverse('mailing:letter_detail', args=[self.kwargs.get('pk')])
-
-    # def form_valid(self, form):
 
 
 class LetterListView(LoginRequiredMixin, ListView):
@@ -108,9 +104,53 @@ class MailingDetailView(LoginRequiredMixin, DetailView):
 
 
 class MailingDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
-    model = Mailing
+    model = MailingAttempt
     permission_required = 'mailing.delete_mailing'
     success_url = reverse_lazy('mailing:mailing_list')
+
+
+class MailingAttemptListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
+    model = MailingAttempt
+    permission_required = 'mailing.view_attempt'
+    context_object_name = 'mailing_attempts'
+    template_name = 'mailing/mailing_attempt_list.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Общая статистика рассылок
+        context['total_mailings'] = Mailing.objects.count()
+        context['successful_attempts'] = MailingAttempt.objects.filter(status=MailingAttempt.Status.SUCCESS).count()
+        context['failed_attempts'] = MailingAttempt.objects.filter(status=MailingAttempt.Status.FAILED).count()
+
+        # Если есть попытки отправки, рассчитаем среднюю скорость
+        attempts = MailingAttempt.objects.all()
+        if attempts.exists():
+            total_time = sum((attempt.attempt_time - attempt.mailing.send_time).total_seconds() for attempt in attempts)
+            context['average_send_time'] = total_time / attempts.count() / 60  # Преобразуем в минуты
+        else:
+            context['average_send_time'] = 0
+
+        return context
+
+
+class MailingAttemptDetailView(LoginRequiredMixin, PermissionRequiredMixin, DetailView):
+    model = MailingAttempt
+    permission_required = 'mailing.view_attempt'
+    context_object_name = 'mailing_attempt'  # имя переменной для доступа в шаблоне
+    template_name = 'mailing/mailing_attempt_detail.html'
+
+
+# class MailingAttemptCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
+#     model = MailingAttempt
+#     permission_required = 'mailing.create_attempt'
+#
+#     def form_valid(self, form):
+#         # attempt = form.save()
+#         # user = self.request.user
+#         # attempt.owner = user
+#         # attempt.save()
+#         form.instance.owner = self.request.user  # так исключается одно обращение к базе
+#         return super().form_valid(form)
 
 
 @login_required

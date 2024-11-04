@@ -1,4 +1,4 @@
-from django.forms import ModelForm, BooleanField
+from django.forms import ModelForm, BooleanField, DateTimeInput
 
 from mailing.models import Client, Letter, Mailing
 
@@ -41,5 +41,8 @@ class LetterForm(StyleFormMixin, ModelForm):
 class MailingForm(StyleFormMixin, ModelForm):
     class Meta:
         model = Mailing
-        fields = "__all__"
-        # exclude = ("email_client",)
+        # fields = "__all__"
+        exclude = ('owner',)
+        # widgets = {
+        #     'send_time': DateTimeInput(format=('%Y-%m-%dT%H:%M'), attrs={'type': 'datetime.local'}),
+        # }

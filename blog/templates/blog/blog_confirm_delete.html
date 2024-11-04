@@ -1,0 +1,22 @@
+{% extends 'blog/blog_list.html' %}
+{% block content%}
+<div class="container">
+    <div class="row">
+        <div class="col-6">
+            <form class="row" method="post" enctype="multipart/form-data">
+                <div class="card">
+                    <p class="card-text">Удаляем {{ blog.title }} или нет?</p>
+                    <div class="card-body">
+                        {% csrf_token %}
+                    </div>
+                    <button type="submit" class="btn btn-danger">
+                        Удалить
+                    </button>
+                    <a class="btn btn-primary" href="{% url 'blog:blog_list' %}"
+                       role="button">Отменить удаление</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
