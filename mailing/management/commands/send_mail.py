@@ -11,7 +11,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         while True:
-            mailings = Mailing.objects.filter(status=Mailing.Status.CREATED)
+            mailings = Mailing.objects.filter(status=Mailing.Status.CREATED, is_active=True)
 
             if not mailings:
                 print("Нет доступных рассылок для отправки.")
@@ -50,7 +50,7 @@ class Command(BaseCommand):
 
 def single_mailing(mailing):
     clients = mailing.clients.all()
-    emails = [client.email for client in clients]
+    emails = [client.email_client for client in clients]
 
     attempt_status = MailingAttempt.Status.SUCCESS
     server_response = None
@@ -61,7 +61,7 @@ def single_mailing(mailing):
 
         send_mail(
             subject=mailing.message.title,
-            message=mailing.message.body,
+            message=mailing.message.message,
             from_email=settings.EMAIL_HOST_USER,
             recipient_list=emails,
             fail_silently=False,

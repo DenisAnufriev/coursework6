@@ -144,3 +144,5 @@ EMAIL_ADMIN = EMAIL_HOST_USER
 #         }
 #     }
 
+APSCHEDULER_DATETIME_FORMAT = "N j, Y, f:s a"  # Формат даты и времени
+APSCHEDULER_RUN_NOW_TIMEOUT = 25  # Максимальное время выполнения задачи

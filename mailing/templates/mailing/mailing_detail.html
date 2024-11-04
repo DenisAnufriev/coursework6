@@ -14,7 +14,7 @@
                         Тема рассылки: {{ object.message.title }}
                     </li>
                     <li>
-                        Содержимое: {{ object.message.body|truncatechars:20 }}
+                        Содержимое: {{ object.message.message|truncatechars:20 }}
                     </li>
                     {% if object.clients.all %}
                     <ul class="grey-text text-darken-3">

@@ -147,7 +147,7 @@ class MailingAttempt(models.Model):
     )
 
     def __str__(self):
-        return f"Рассылка: {self.attempt_time} статус {self.get_status_display()}"
+        return f"Рассылка: {self.mailing}{self.attempt_time} статус {self.get_status_display()}"
 
     class Meta:
         verbose_name = "попытка рассылки"

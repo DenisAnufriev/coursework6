@@ -22,7 +22,7 @@
                         <li>Почта: {{ object.email_client}}</li>
                     </ul>
                     {% if user == object.user or user.is_superuser %}
-                    <a class="btn btn-warning" href="{% url 'mailing:client_edit' object.pk %}" role="button">Изменить</a>
+                    <a class="btn btn-warning" href="{% url 'mailing:client_update' object.pk %}" role="button">Изменить</a>
                     <a class="btn btn-danger" href="{% url 'mailing:client_delete' object.pk %}" role="button">Удалить</a>
                     {% endif %}
                     <a class="btn btn-primary" href="{% url 'mailing:client_list' %}" role="button">Назад</a>

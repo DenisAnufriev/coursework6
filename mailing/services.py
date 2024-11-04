@@ -1,74 +1,124 @@
-import datetime
 import smtplib
+from datetime import timedelta
+
 import pytz
 from apscheduler.schedulers.background import BackgroundScheduler
+from django.conf import settings
 from django.core.mail import send_mail
 from django.utils import timezone
 
-from sendflow.settings import EMAIL_HOST_USER
 from mailing.models import Mailing, MailingAttempt
-from users.models import User
 
 
-def get_next_scheduled_date(last_attempt_date, frequency):
-    """Вычисляет следующую дату рассылки в зависимости от её периодичности."""
-    if frequency == "D":
-        return last_attempt_date + datetime.timedelta(days=1)
-    elif frequency == "W":
-        return last_attempt_date + datetime.timedelta(days=7)
-    elif frequency == "M":
-        return last_attempt_date + datetime.timedelta(days=30)
-    return last_attempt_date
-
-
-def get_mailings():
-    """Собирает активные рассылки, готовые для отправки, и передает их на отправку."""
-    mailing_client_dict = {}
+def check_and_send_mailings():
+    """Проверяет и отправляет активные рассылки."""
     current_time = timezone.now()
-    print("Текущее дата и время:", current_time)
+    print(current_time.strftime('%Y-%m-%d %H:%M:%S'))
+    moscow_tz = pytz.timezone('Europe/Moscow')
+    moscow_time = current_time.astimezone(moscow_tz)
 
-    mailing_list = Mailing.objects.filter(is_published=True, status='W')
+    print("Текущее дата и время в Москве:", moscow_time.strftime('%Y-%m-%d %H:%M:%S'))
 
-    for mailing in mailing_list:
-        # Проверка последней успешной попытки рассылки
-        last_attempt = MailingAttempt.objects.filter(mailing_id_id=mailing.id, status=True).order_by(
-            'date_last_attempt').last()
-
-        # Первая отправка или повторная проверка периодичности
-        if last_attempt is None and mailing.date_of_first_dispatch <= current_time:
-            mailing_client_dict[mailing] = mailing.client_list.all()
-        elif last_attempt:
-            next_date = get_next_scheduled_date(last_attempt.date_last_attempt, mailing.periodicity)
-            if next_date <= current_time:
-                mailing_client_dict[mailing] = mailing.client_list.all()
-
-    do_send_mail(mailing_client_dict)
+    # Получаем все активные и запланированные на отправку рассылки
+    mailings = Mailing.objects.filter(
+        is_active=True,
+        send_time__lte=current_time,
+        status=Mailing.Status.CREATED,
+    )
+    print(mailings)
+    for mailing in mailings:
+        if can_send_mailing(mailing):
+            send_mailing(mailing)
 
 
-def do_send_mail(mailing_client_dict):
-    """Отправляет сообщения клиентам из переданного словаря рассылок."""
-    print("Количество рассылок для отправки:", len(mailing_client_dict))
-    for mailing, client_list in mailing_client_dict.items():
-        clients = [client.email for client in client_list]
-        try:
-            print(f'Отправка рассылки: {mailing.message_id.title}\n'
-                  f'Сообщение: {mailing.message_id.message}\n'
-                  f'Получатели: {clients}')
-            server_response = send_mail(
-                subject=mailing.message_id.title,
-                message=mailing.message_id.message,
-                from_email=EMAIL_HOST_USER,
-                recipient_list=clients,
-                fail_silently=False,
-            )
-            MailingAttempt.objects.create(status=True, server_response=server_response, mailing_id=mailing,
-                                   owner=mailing.owner)
-        except smtplib.SMTPException as error:
-            MailingAttempt.objects.create(status=False, server_response=str(error), mailing_id=mailing, owner=mailing.owner)
+def can_send_mailing(mailing: Mailing) -> bool:
+    """Проверяет, можно ли отправить рассылку на основе последней попытки."""
+    print('Проверяет, можно ли отправить рассылку на основе последней попытки.')
+    last_attempt = MailingAttempt.objects.filter(
+        mailing=mailing,
+        status=MailingAttempt.Status.SUCCESS,
+    ).order_by('-attempt_time').first()
+    print(f'{last_attempt}')
+
+    if not last_attempt:
+        return True
+
+    frequency_map = {
+        Mailing.Frequency.DAILY: timedelta(days=1),
+        Mailing.Frequency.WEEKLY: timedelta(weeks=1),
+        Mailing.Frequency.MONTHLY: timedelta(days=30),
+    }
+
+    next_send_time = last_attempt.attempt_time + frequency_map[mailing.frequency]
+    print(f"{next_send_time}")
+    return timezone.now() >= next_send_time
+
+
+def send_mailing(mailing):
+    clients = mailing.clients.all()
+    emails = [client.email_client for client in clients]
+
+    # Устанавливаем статус рассылки на "Запущена" перед отправкой
+    attempt_status = MailingAttempt.Status.SUCCESS
+    server_response = None
+    print("send_mailing")
+    try:
+        mailing.status = Mailing.Status.RUNNING
+        mailing.save()
+
+        send_mail(
+            subject=mailing.message.title,
+            message=mailing.message.message,
+            from_email=settings.EMAIL_HOST_USER,
+            recipient_list=emails,
+            fail_silently=False,
+        )
+
+        mailing.status = Mailing.Status.CREATED
+
+        if mailing.frequency == Mailing.Frequency.DAILY:
+            mailing.send_time += timedelta(days=1)
+        elif mailing.frequency == Mailing.Frequency.WEEKLY:
+            mailing.send_time += timedelta(weeks=1)
+        elif mailing.frequency == Mailing.Frequency.MONTHLY:
+            mailing.send_time += timedelta(days=30)
+
+        mailing.save()
+
+    except smtplib.SMTPException as error:
+        mailing.is_active = False
+        mailing.save()
+        attempt_status = MailingAttempt.Status.FAILED
+        server_response = str(error)
+
+    finally:
+        MailingAttempt.objects.create(
+            mailing=mailing, status=attempt_status, server_response=server_response
+        )
+
+
+def update_next_send_time(mailing: Mailing):
+    """Обновляет время следующей отправки рассылки на основе её периодичности."""
+    frequency_map = {
+        Mailing.Frequency.DAILY: timedelta(days=1),
+        Mailing.Frequency.WEEKLY: timedelta(weeks=1),
+        Mailing.Frequency.MONTHLY: timedelta(days=30),
+    }
+
+    # Обновляем send_time
+    mailing.send_time += frequency_map[mailing.frequency]
+    mailing.status = Mailing.Status.CREATED  # Возвращаем статус к "Создана"
+    mailing.save()
+
+
+scheduler = None
 
 
 def start():
     """Запускает планировщик для выполнения периодических задач."""
-    scheduler = BackgroundScheduler()
-    scheduler.add_job(get_mailings, 'interval', seconds=10, id='mailing_scheduler_job')
-    scheduler.start()
+    global scheduler
+    if scheduler is None:
+        scheduler = BackgroundScheduler()
+        scheduler.add_job(check_and_send_mailings, 'interval', seconds=60, id='mailing_scheduler_job')
+        scheduler.start()
+        print("scheduler start")

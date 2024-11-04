@@ -15,7 +15,7 @@
                     <li>
                         Тема: {{ object.title }}
                     </li>
-                    <li>Содержимое: {{ object.body }}</li>
+                    <li>Содержимое: {{ object.message }}</li>
                 </ul>
                 <a class="btn btn-warning" href="{% url 'mailing:letter_update' object.pk %}" role="button">Изменить</a>
                 <a class="btn btn-danger" href="{% url 'mailing:letter_delete' object.pk %}" role="button">Удалить</a>
