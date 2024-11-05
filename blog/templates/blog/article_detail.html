@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="container py-3">
+
+    <!-- Заголовок статьи -->
+    <div class="pricing-header p-3 pb-md-4 mx-auto text-center">
+        <h1 class="display-5 fw-normal">{{ object.title }}</h1>
+        <p class="fs-6 text-muted">Опубликовано: {{ object.created_at|date:"d.m.Y" }}</p>
+    </div>
+
+    <!-- Карточка статьи -->
+    <div class="row justify-content-center">
+        <div class="col-md-10 col-lg-8">
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-image">
+                    <img src="{{ object.preview.url }}" alt="{{ object.title }}"
+                         class="card-img-top" style="height: 300px; object-fit: cover;">
+                </div>
+                <div class="card-body p-4">
+                    <p>{{ object.content|safe }}</p>
+                </div>
+                <div class="card-footer text-end">
+                    <a href="{% url 'blog:article_list' %}" class="btn btn-primary">
+                        <i class="bi bi-arrow-left"></i> Вернуться к статьям
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}

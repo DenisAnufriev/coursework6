@@ -10,5 +10,7 @@ class MailingConfig(AppConfig):
     def ready(self):
         """ Метод для автоматического запуска рассылки """
         from mailing.services import start
-        sleep(2)
+
+        sleep(10)
         start()
+

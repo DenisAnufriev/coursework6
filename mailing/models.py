@@ -7,14 +7,15 @@ NULLABLE = {"blank": True, "null": True}
 
 
 class Client(models.Model):
+    """Клиенты для рассылок"""
     full_name = models.CharField(
         max_length=100,
         verbose_name="ФИО",
-        help_text="при наличии",
+        help_text="Обязательно",
     )
     email_client = models.EmailField(
         verbose_name="электронная почта",
-        help_text="обязательно",
+        help_text="Обязательно",
         unique=True,
     )
     comment = models.TextField(
@@ -37,6 +38,7 @@ class Client(models.Model):
 
 
 class Letter(models.Model):
+    """Письма для рассылок"""
     title = models.CharField(
         max_length=100,
         default="Рассылка",
@@ -64,6 +66,7 @@ class Letter(models.Model):
 
 
 class Mailing(models.Model):
+    """Рассылки"""
     class Status(models.TextChoices):
         CREATED = "CR", "Создана"
         RUNNING = "RN", "Запущена"
@@ -112,7 +115,8 @@ class Mailing(models.Model):
     )
 
     def __str__(self):
-        return f"Рассылка: {self.id}, Статус: {self.get_status_display()}"
+        return (f"ID: {self.id},"
+                f" Статус: {self.get_status_display()}")
 
     class Meta:
         verbose_name = "рассылка"
@@ -147,7 +151,7 @@ class MailingAttempt(models.Model):
     )
 
     def __str__(self):
-        return f"Рассылка: {self.mailing}{self.attempt_time} статус {self.get_status_display()}"
+        return f"Рассылка создана: {self.mailing}"
 
     class Meta:
         verbose_name = "попытка рассылки"

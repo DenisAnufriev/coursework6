@@ -1,72 +1,61 @@
-
 {% extends 'base.html' %}
 {% block content %}
 
 <div class="container py-3">
-    <body>
 
-    <svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
-        <symbol id="check" viewBox="0 0 16 16">
-            <title>Check</title>
-            <path d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0z"/>
-        </symbol>
-    </svg>
-
-
+    <!-- Заголовок статистики -->
     <div class="pricing-header p-3 pb-md-4 mx-auto text-center">
-        <h1 class="display-4 fw-normal">Рассылка писем</h1>
-        <p class="fs-5 text-muted">Управляйте своими рассылками через  удобный и понятный интерфейс</p>
+        <h1 class="header center orange-text">{{ title }}</h1>
+<!--        <h1 class="display-4 fw-normal">Статистика рассылок</h1>-->
+        <p class="fs-5 text-muted">Актуальная информация о ваших рассылках и клиентах</p>
     </div>
-    </body>
 
-    <body>
-    <div class="row row-cols-1 row-cols-md-3 mb-3 text-center">
+    <!-- Блок статистики -->
+    <div class="row mb-4 text-center">
         <div class="col">
             <div class="card mb-4 rounded-3 shadow-sm">
                 <div class="card-header py-3">
-                    <h4 class="my-0 fw-normal">Рассылки</h4>
+                    <h4 class="my-0 fw-normal">Статистика рассылок</h4>
                 </div>
                 <div class="card-body">
                     <ul class="list-unstyled mt-3 mb-4">
-                        <li>Управляйте своими</li>
-                        <li>рассылками</li>
+                        <li><strong>Всего рассылок:</strong> {{ total_mailings }}</li>
+                        <li><strong>Активных рассылок:</strong> {{ active_mailings }}</li>
+                        <li><strong>Уникальных клиентов:</strong> {{ unique_clients }}</li>
                     </ul>
-                     <a class="btn btn-primary" href="{% url 'mailing:mailing_list' %}" role="button">Перейти</a>
-                </div>
-            </div>
-        </div>
-        <div class="col">
-            <div class="card mb-4 rounded-3 shadow-sm">
-                <div class="card-header py-3">
-                    <h4 class="my-0 fw-normal">Клиенты</h4>
-                </div>
-                <div class="card-body">
-                    <ul class="list-unstyled mt-3 mb-4">
-                        <li>Добавляйте и удаляйте</li>
-                        <li>получателей рассылок</li>
-
-                    </ul>
-                    <a class="btn btn-primary" href="{% url 'mailing:client_list' %}" role="button">Перейти</a>
-                </div>
-            </div>
-        </div>
-<div class="col">
-            <div class="card mb-4 rounded-3 shadow-sm">
-                <div class="card-header py-3">
-                    <h4 class="my-0 fw-normal">Письма</h4>
-                </div>
-                <div class="card-body">
-                    <ul class="list-unstyled mt-3 mb-4">
-                        <li>Создать, отредактировать</li>
-                        <li>сообщения для получателей</li>
-
-                    </ul>
-                    <a class="btn btn-primary" href="{% url 'mailing:letter_list' %}" role="button">Перейти</a>
+                    <a class="btn btn-primary" href="{% url 'mailing:mailing_list' %}" role="button">Перейти к
+                        рассылкам</a>
                 </div>
             </div>
         </div>
     </div>
-    </body>
+    <!-- Блок Блога -->
+    <div class="container my-5">
+        <h2 class="text-center mb-4">Свежие статьи из блога</h2>
+        <div class="row">
+            {% for article in random_articles %}
+            <div class="col-md-4">
+                <div class="card shadow-sm mb-4">
+                    <img src="{{ article.preview.url }}" alt="{{ article.title }}" class="card-img-top"
+                         style="height: 200px; object-fit: cover;">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ article.title }}</h5>
+                        <p class="card-text text-muted">{{ article.summary|truncatewords:20 }}</p>
+                    </div>
+                    <div class="card-footer text-center">
+                        <a href="{% url 'blog:article_detail' article.pk %}" class="btn btn-outline-primary btn-sm">Читать
+                            далее</a>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col text-center">
+                <h5 class="text-muted">Статьи пока не добавлены</h5>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
 </div>
 
 {% endblock %}

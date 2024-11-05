@@ -1,11 +1,33 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="container">
-    <h1 class="display-4">Попытка рассылки №{{ mailing_attempt.id }}</h1>
-    <p>Дата и время попытки: {{ mailing_attempt.attempt_time|date:"d.m.Y H:i" }}</p>
-    <p>Статус: {{ mailing_attempt.get_status_display }}</p>
-    <p>Ответ сервера: {{ mailing_attempt.server_response }}</p>
-    <a href="{% url 'mailing:mailing_attempt_list' %}" class="btn btn-secondary">Назад</a>
+<div class="container my-5">
+    <div class="card shadow-lg border-primary">
+        <div class="card-header bg-primary text-white">
+            <h1 class="display-6 text-center">Попытка рассылки №{{ mailing_attempt.id }}</h1>
+        </div>
+        <div class="card-body">
+            <p class="mb-2">
+                <strong>Дата и время попытки:</strong> {{ mailing_attempt.attempt_time|date:"d.m.Y H:i" }}
+            </p>
+            <p class="mb-2">
+                <strong>Статус:</strong>
+                <span class="badge {% if mailing_attempt.get_status_display == 'Успешно' %}bg-success{% else %}bg-danger{% endif %}">
+                    {{ mailing_attempt.get_status_display }}
+                </span>
+            </p>
+            <p class="mb-4">
+                <strong>Рассылка №</strong> {{ mailing_attempt.mailing.message.id }}
+            </p>
+            <p class="mb-4">
+                <strong>Ответ сервера:</strong> {{ mailing_attempt.server_response|default:"Нет данных" }}
+            </p>
+            <div class="text-center">
+                <a href="{% url 'mailing:mailing_attempt_list' %}" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left"></i> Назад
+                </a>
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}

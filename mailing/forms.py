@@ -1,5 +1,5 @@
 from django.forms import ModelForm, BooleanField, DateTimeInput
-
+from django import forms
 from mailing.models import Client, Letter, Mailing
 
 
@@ -27,22 +27,43 @@ class StyleFormMixin:
 class ClientForm(StyleFormMixin, ModelForm):
     class Meta:
         model = Client
-        fields = "__all__"
-        # exclude = ("email_client",)
+        # fields = "__all__"
+        exclude = ("owner",)
 
 
 class LetterForm(StyleFormMixin, ModelForm):
     class Meta:
         model = Letter
-        fields = "__all__"
+        fields = ('title', 'message',)
         # exclude = ("email_client",)
 
 
-class MailingForm(StyleFormMixin, ModelForm):
+class MailingForm(StyleFormMixin, forms.ModelForm):
+    send_time = forms.DateTimeField(
+        widget=forms.DateTimeInput(
+            attrs={"type": "datetime-local"},
+            format="%Y-%m-%dT%H:%M",
+        ),
+        input_formats=["%Y-%m-%dT%H:%M"],
+        label="Дата и время первой отправки рассылки",
+    )
+
     class Meta:
         model = Mailing
-        # fields = "__all__"
-        exclude = ('owner',)
-        # widgets = {
-        #     'send_time': DateTimeInput(format=('%Y-%m-%dT%H:%M'), attrs={'type': 'datetime.local'}),
-        # }
+        fields = [
+            "send_time",
+            "frequency",
+            "message",
+            "clients",
+        ]
+
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop("user")
+        super().__init__(*args, **kwargs)
+        if user.is_superuser:
+            self.fields["message"].queryset = Letter.objects.all()
+            self.fields["clients"].queryset = Client.objects.all()
+        else:
+            self.fields["message"].queryset = Letter.objects.filter(owner=user)
+            self.fields["clients"].queryset = Client.objects.filter(owner=user)
+        self.apply_widget_classes()

@@ -1,22 +1,42 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="container">
-    <h1 class="display-4">Попытки рассылок</h1>
-    <div class="row">
+<div class="container my-5">
+    <h1 class="display-4 text-center mb-4">Попытки рассылок</h1>
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
         {% for attempt in mailing_attempts %}
         <div class="col">
-            <div class="card">
+            <div class="card mb-4 rounded-3 shadow-sm border-primary">
+                <div class="card-header py-3 text-white bg-primary border-primary">
+                    Попытка №{{ attempt.id }}
+                </div>
                 <div class="card-body">
-                    <h5 class="card-title">Попытка №{{ attempt.id }}</h5>
-                    <p class="card-text">Статус: {{ attempt.get_status_display }}</p>
-                    <a href="{% url 'mailing:mailing_attempt_detail' attempt.id %}" class="btn btn-primary">Подробнее</a>
+                    <h5 class="card-title text-primary mb-3">Рассылка: №
+                        <span class="badge {% if attempt.get_status_display == 'Успешно' %}bg-success{% else %}bg-danger{% endif %}">
+                            {{ attempt.mailing.message.id }}
+                        </span>
+                    </h5>
+                    <h5 class="card-title text-primary mb-3">Статус:
+                        <span class="badge {% if attempt.get_status_display == 'Успешно' %}bg-success{% else %}bg-danger{% endif %}">
+                            {{ attempt.get_status_display }}
+                        </span>
+                    </h5>
+                    <a href="{% url 'mailing:mailing_attempt_detail' attempt.id %}" class="btn btn-outline-primary w-100">Подробнее</a>
                 </div>
             </div>
         </div>
         {% empty %}
-        <p>Нет попыток рассылок.</p>
+        <div class="col">
+            <p class="text-muted text-center">Нет попыток рассылок.</p>
+        </div>
         {% endfor %}
+    </div>
+
+    <!-- Кнопка для перехода к статистике рассылок -->
+    <div class="text-center mt-4">
+        <a href="{% url 'mailing:mailing_list' %}" class="btn btn-outline-primary btn-lg w-100">
+            Перейти к статистике рассылок
+        </a>
     </div>
 </div>
 {% endblock %}

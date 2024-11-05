@@ -8,10 +8,10 @@
                 <div class="card-body">
                     <form method="post">
                         {% csrf_token %}
-                        <p>Удалить сообщение "{{ object.title }}"?</p>
+                        <p>Удалить рассылку № "{{ object.id }}"?</p>
 
                         <button type="submit" class="btn btn-danger">Да, удалить</button>
-                        <a href="{% url 'mailing:mail_list' %}" class="btn btn-warning">Отмена</a>
+                        <a href="{% url 'mailing:mailing_list' %}" class="btn btn-warning">Отмена</a>
                     </form>
                 </div>
             </div>

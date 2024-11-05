@@ -13,7 +13,7 @@ from mailing.models import Mailing, MailingAttempt
 def check_and_send_mailings():
     """Проверяет и отправляет активные рассылки."""
     current_time = timezone.now()
-    print(current_time.strftime('%Y-%m-%d %H:%M:%S'))
+    print(f"серверное время {current_time.strftime('%Y-%m-%d %H:%M:%S')}")
     moscow_tz = pytz.timezone('Europe/Moscow')
     moscow_time = current_time.astimezone(moscow_tz)
 
@@ -25,20 +25,26 @@ def check_and_send_mailings():
         send_time__lte=current_time,
         status=Mailing.Status.CREATED,
     )
-    print(mailings)
+    # print(f"существует {mailings}")
     for mailing in mailings:
+        print(f"mailing время отправки{mailing.send_time} текущее время {current_time} статус {mailing.status}")
+        print(mailing)
         if can_send_mailing(mailing):
+            print('отправка')
             send_mailing(mailing)
 
 
 def can_send_mailing(mailing: Mailing) -> bool:
     """Проверяет, можно ли отправить рассылку на основе последней попытки."""
-    print('Проверяет, можно ли отправить рассылку на основе последней попытки.')
+    # print('Проверяет, можно ли отправить рассылку на основе последней попытки.')
     last_attempt = MailingAttempt.objects.filter(
         mailing=mailing,
         status=MailingAttempt.Status.SUCCESS,
     ).order_by('-attempt_time').first()
-    print(f'{last_attempt}')
+    # if last_attempt:
+    #     print(f'last_attempt mailing: {last_attempt.mailing}')
+    # else:
+    #     print('last_attempt is None')
 
     if not last_attempt:
         return True
@@ -50,8 +56,9 @@ def can_send_mailing(mailing: Mailing) -> bool:
     }
 
     next_send_time = last_attempt.attempt_time + frequency_map[mailing.frequency]
-    print(f"{next_send_time}")
-    return timezone.now() >= next_send_time
+    can_send = timezone.now() <= next_send_time
+
+    return can_send
 
 
 def send_mailing(mailing):
@@ -96,19 +103,6 @@ def send_mailing(mailing):
             mailing=mailing, status=attempt_status, server_response=server_response
         )
 
-
-def update_next_send_time(mailing: Mailing):
-    """Обновляет время следующей отправки рассылки на основе её периодичности."""
-    frequency_map = {
-        Mailing.Frequency.DAILY: timedelta(days=1),
-        Mailing.Frequency.WEEKLY: timedelta(weeks=1),
-        Mailing.Frequency.MONTHLY: timedelta(days=30),
-    }
-
-    # Обновляем send_time
-    mailing.send_time += frequency_map[mailing.frequency]
-    mailing.status = Mailing.Status.CREATED  # Возвращаем статус к "Создана"
-    mailing.save()
 
 
 scheduler = None

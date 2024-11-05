@@ -32,6 +32,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
+    'blog',
     'mailing',
     'users',
     'django_apscheduler',
@@ -135,14 +136,14 @@ DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 EMAIL_ADMIN = EMAIL_HOST_USER
 
 
-# CACHE_ENABLED = True
-# if CACHE_ENABLED:
-#     CACHES = {
-#         "default": {
-#             'BACKEND': 'django.core.cache.backends.redis.RedisCache',
-#             'LOCATION': os.getenv('LOCATION'),
-#         }
-#     }
+CACHE_ENABLED = False
+if CACHE_ENABLED:
+    CACHES = {
+        "default": {
+            'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+            'LOCATION': os.getenv('LOCATION'),
+        }
+    }
 
 APSCHEDULER_DATETIME_FORMAT = "N j, Y, f:s a"  # Формат даты и времени
 APSCHEDULER_RUN_NOW_TIMEOUT = 25  # Максимальное время выполнения задачи

@@ -1,54 +1,61 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="container">
-    <div class="col">
-        <div class="card mb-4 rounded-3 shadow-sm border-primary">
-            <div class="card-header py-3 text-white bg-primary border-primary">
-                <h4 class="my-0 fw-normal">Статистика рассылок</h4>
-            </div>
-            <div class="card-body">
-                <ul class="list-unstyled mt-3 mb-4">
-                    <li><strong>Общее количество рассылок:</strong> {{ total_mailings }}</li>
-                    <li><strong>Успешные отправки:</strong> {{ successful_attempts }}</li>
-                    <li><strong>Неуспешные попытки:</strong> {{ failed_attempts }}</li>
-                    <li><strong>Средняя скорость отправки:</strong> {{ average_send_time|floatformat:2 }} минут</li>
-                </ul>
-                <a href="{% url 'mailing:mailing_attempt_list' %}" class="w-100 btn btn-lg btn-primary">
-                    Посмотреть все попытки
-                </a>
-            </div>
-        </div>
+<div class="container my-5">
+
+    <!-- Кнопка перехода к статистике рассылок -->
+    <div class="text-center mb-4">
+        <a href="{% url 'mailing:mailing_attempt_list' %}" class="btn btn-outline-secondary btn-lg">
+            Попытки рассылок
+        </a>
     </div>
-    <a class="btn btn-outline-primary" href="{% url 'mailing:mailing_create' %}">Создать рассылку</a>
-</div>
-<br>
-<div class="container">
-    <div class="row text-center">
+
+    <!-- Кнопка создания новой рассылки -->
+    <div class="text-center mb-4">
+        <a href="{% url 'mailing:mailing_create' %}" class="btn btn-outline-primary btn-lg">
+            Создать новую рассылку
+        </a>
+    </div>
+
+    <!-- Заголовок раздела с рассылками -->
+    <h2 class="text-center mb-4">Все рассылки</h2>
+
+    <!-- Список рассылок -->
+    <div class="row">
         {% for object in object_list %}
-        <div class="col-3">
-            <div class="card mb-6 box-shadow">
-                <div class="card-header">
-                    Рассылка №{{ object.id }} - {{ object.message.title }}
+        <div class="col-12 col-md-6 col-lg-4 mb-4">
+            <div class="card border-light shadow-sm h-100">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Рассылка №{{ object.id }}</h5>
                 </div>
-                <p>
-                    <strong>Дата и время создания:</strong> {{ object.created_at|date:"d.m.Y H:i" }}<br>
-                    <strong>Статус:</strong> {{ object.get_status_display }}<br>
-                    {% if object.server_response %}
-                        <strong>Ответ сервера:</strong> {{ object.server_response }}<br>
-                    {% endif %}
-                </p>
                 <div class="card-body">
-                    <a class="btn btn-primary" href="{% url 'mailing:mailing_detail' object.pk %}" role="button">Посмотреть</a>
-                    <a class="btn btn-warning" href="{% url 'mailing:mailing_update' object.pk %}" role="button">Изменить</a>
-                    <a class="btn btn-danger" href="{% url 'mailing:mailing_delete' object.pk %}" role="button">Удалить</a>
+                    <h6 class="card-title">{{ object.message.title }}</h6>
+                    <p class="card-text">
+                        <strong>Создано:</strong> {{ object.created_at|date:"d.m.Y H:i" }}<br>
+                        <span class="badge {% if object.get_status_display == 'Успешно' %}bg-success{% else %}bg-warning{% endif %}">
+                            {{ object.get_status_display }}
+                        </span>
+                    </p>
+                    {% if object.server_response %}
+                    <p class="small text-muted">Ответ сервера: {{ object.server_response }}</p>
+                    {% endif %}
+                </div>
+                <div class="card-footer text-center">
+                    <div class="btn-group" role="group">
+                        <a href="{% url 'mailing:mailing_detail' object.pk %}"
+                           class="btn btn-primary btn-sm">Посмотреть</a>
+                        <a href="{% url 'mailing:mailing_update' object.pk %}"
+                           class="btn btn-warning btn-sm">Изменить</a>
+                        <a href="{% url 'mailing:mailing_delete' object.pk %}" class="btn btn-danger btn-sm">Удалить</a>
+                    </div>
                 </div>
             </div>
         </div>
         {% empty %}
-            <h5 class="text-center">Нет выполненных попыток рассылки.</h5>
+        <div class="col text-center">
+            <h5 class="text-muted">Нет доступных рассылок.</h5>
+        </div>
         {% endfor %}
     </div>
 </div>
-
 {% endblock %}

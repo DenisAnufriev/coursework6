@@ -13,10 +13,10 @@
 
                     <ul class="list-unstyled mt-3 mb-4 text-start m-3">
                         <li>
-                            {% if object.name != None %}
-                            Имя: {{ object.name }}
+                            {% if object.full_name != None %}
+                            ФИО: {{ object.full_name }}
                             {% else %}
-                            Имя: не указано
+                            ФИО: не указано
                             {% endif %}
                         </li>
                         <li>Почта: {{ object.email_client}}</li>

@@ -9,6 +9,7 @@
             <nav class="d-inline-flex mt-2 mt-md-0 ms-md-auto">
                 <div class="btn-group">
                     <a class="p-2 btn btn-outline-primary" href="/">Главная</a>
+                    <a class="p-2 btn btn-outline-primary" href="{% url 'blog:article_list' %}">Блог</a>
                     <a class="p-2 btn btn-outline-primary"
                        href="{% url 'mailing:mailing_list' %}">Рассылки</a>
                     <a class="p-2 btn btn-outline-primary" href="{% url 'mailing:client_list' %}">Клиенты</a>
