@@ -10,9 +10,9 @@ class Command(BaseCommand):
             email='admin@test.com',
             first_name='Admin',
             last_name='SkyPro',
-            is_active='True',
-            is_staff='True',
-            is_superuser='True'
+            is_active=True,
+            is_staff=True,
+            is_superuser=True,
         )
 
         user.set_password('12345')
