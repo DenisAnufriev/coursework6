@@ -27,10 +27,10 @@ def check_and_send_mailings():
     )
     # print(f"существует {mailings}")
     for mailing in mailings:
-        print(f"mailing время отправки{mailing.send_time} текущее время {current_time} статус {mailing.status}")
-        print(mailing)
+        # print(f"mailing время отправки{mailing.send_time} текущее время {current_time} статус {mailing.status}")
+        # print(mailing)
         if can_send_mailing(mailing):
-            print('отправка')
+            # print('отправка')
             send_mailing(mailing)
 
 
@@ -56,7 +56,7 @@ def can_send_mailing(mailing: Mailing) -> bool:
     }
 
     next_send_time = last_attempt.attempt_time + frequency_map[mailing.frequency]
-    can_send = timezone.now() <= next_send_time
+    can_send = timezone.now() >= next_send_time
 
     return can_send
 
@@ -115,4 +115,4 @@ def start():
         scheduler = BackgroundScheduler()
         scheduler.add_job(check_and_send_mailings, 'interval', seconds=60, id='mailing_scheduler_job')
         scheduler.start()
-        print("scheduler start")
+        # print("scheduler start")
