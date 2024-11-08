@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load perm_tag %}
 {% block content %}
 
 <div class="container">
@@ -16,7 +17,7 @@
                     <li>
                         Содержимое: {{ object.message.message|truncatechars:20 }}
                     </li>
-                    {% if object.clients.all %}
+                    {% if object.clients.exists %}
                     <ul class="grey-text text-darken-3">
                         {% for client in object.clients.all %}
                         <li>{{ client.email_client }} ({{ client.full_name }})</li>
@@ -26,14 +27,55 @@
                     <p class="grey-text text-darken-3">Нет выбранных клиентов для этой рассылки.</p>
                     {% endif %}
                 </ul>
-                <a class="btn btn-warning" href="{% url 'mailing:mailing_update' object.pk %}" role="button">Изменить</a>
+                <a class="btn btn-warning" href="{% url 'mailing:mailing_update' object.pk %}"
+                   role="button">Изменить</a>
                 <a class="btn btn-danger" href="{% url 'mailing:mailing_delete' object.pk %}" role="button">Удалить</a>
                 <a class="btn btn-primary" href="{% url 'mailing:mailing_list' %}" role="button">Назад</a>
 
             </div>
+            <div class="col s4 right-align">
+                <button data-pk="{{ object.pk }}"
+                        class="btn-small waves-effect waves-light {% if object.is_active %}green darken-2{% else %}grey lighten-1{% endif %} toggle-active-btn">
+                    <i class="material-icons left"></i>{% if object.is_active %}Активна{% else %}Неактивна{% endif %}
+                </button>
+            </div>
         </div>
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const button = document.querySelector('.toggle-active-btn');
+        if (button) {
+            button.addEventListener('click', function () {
+                const pk = this.getAttribute('data-pk');
+                const isActive = this.classList.contains('green');
+                fetch(`{% url 'mailing:mailing_toggle_active' 0 %}`.replace('0', pk), {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: JSON.stringify({ 'is_active': !isActive })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        if (isActive) {
+                            this.classList.remove('green', 'darken-2');
+                            this.classList.add('grey', 'lighten-1');
+                            this.innerHTML = '<i class="material-icons left"></i>Неактивна';
+                        } else {
+                            this.classList.remove('grey', 'lighten-1');
+                            this.classList.add('green', 'darken-2');
+                            this.innerHTML = '<i class="material-icons left"></i>Активна';
+                        }
+                    }
+                });
+            });
+        }
+    });
+</script>
 
 
 {% endblock %}

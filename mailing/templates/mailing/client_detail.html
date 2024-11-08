@@ -2,38 +2,45 @@
 {% block content %}
 
 <div class="container">
-      <div class="row text-center">
+    <div class="row text-center">
 
         <div class="col-6">
 
-                <div class="card-body">
-                    <div class="card-header">
-                        <h6 class="display-6">Получатель:</h6>
-                    </div>
+            <div class="card-body">
+                <div class="card-header">
 
-                    <ul class="list-unstyled mt-3 mb-4 text-start m-3">
-                        <li>
-                            {% if object.full_name != None %}
-                            ФИО: {{ object.full_name }}
-                            {% else %}
-                            ФИО: не указано
-                            {% endif %}
-                        </li>
-                        <li>Почта: {{ object.email_client}}</li>
-                    </ul>
-                    {% if user == object.user or user.is_superuser %}
-                    <a class="btn btn-warning" href="{% url 'mailing:client_update' object.pk %}" role="button">Изменить</a>
-                    <a class="btn btn-danger" href="{% url 'mailing:client_delete' object.pk %}" role="button">Удалить</a>
-                    {% endif %}
-                    <a class="btn btn-primary" href="{% url 'mailing:client_list' %}" role="button">Назад</a>
                 </div>
+
+                <ul class="list-unstyled mt-3 mb-4 text-start m-3">
+                    <h6 class="display-6">Получатель:</h6>
+                    <li>
+                        {% if object.full_name != None %}
+                        ФИО: {{ object.full_name }}
+                        {% else %}
+                        ФИО: не указано
+                        {% endif %}
+                    </li>
+                    <li>Почта: {{ object.email_client}}</li>
+                    <li>
+                        {% if object.comment %}
+                        <h6 class="blue-text text-darken-2">Комментарий:</h6>
+                        <p class="grey-text text-darken-3">{{ object.comment|linebreaksbr }}</p>
+                        {% else %}
+                        <br>
+                        {% endif %}
+                    </li>
+                </ul>
+                {% if user == object.user or user.is_superuser %}
+                <a class="btn btn-warning" href="{% url 'mailing:client_update' object.pk %}" role="button">Изменить</a>
+                <a class="btn btn-danger" href="{% url 'mailing:client_delete' object.pk %}" role="button">Удалить</a>
+                {% endif %}
+                <a class="btn btn-primary" href="{% url 'mailing:client_list' %}" role="button">Назад</a>
             </div>
         </div>
-
     </div>
+
 </div>
-
-
+</div>
 
 
 {% endblock %}

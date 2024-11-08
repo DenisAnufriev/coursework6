@@ -13,14 +13,16 @@
                     <strong>{{ object.email_client }}</strong>
                     <br>
                     {% if object.full_name %}
-                        <span>ФИО: {{ object.full_name }}</span>
+                    <span>ФИО: {{ object.full_name }}</span>
                     {% else %}
-                        <span>ФИО: не указано</span>
+                    <span>ФИО: не указано</span>
                     {% endif %}
                 </div>
                 <div class="card-body">
-                    <a class="btn btn-primary w-100 mb-2" href="{% url 'mailing:client_detail' object.pk %}" role="button">Посмотреть</a>
-                    <a class="btn btn-warning w-100 mb-2" href="{% url 'mailing:client_update' object.pk %}" role="button">Изменить</a>
+                    <a class="btn btn-primary w-100 mb-2" href="{% url 'mailing:client_detail' object.pk %}"
+                       role="button">Посмотреть</a>
+                    <a class="btn btn-warning w-100 mb-2" href="{% url 'mailing:client_update' object.pk %}"
+                       role="button">Изменить</a>
                     <a class="btn btn-danger w-100" href="{% url 'mailing:client_delete' object.pk %}" role="button">Удалить</a>
                 </div>
             </div>

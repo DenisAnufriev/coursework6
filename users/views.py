@@ -1,9 +1,13 @@
+import json
 import secrets
 
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
+from django.contrib.auth.models import Group
 from django.core.mail import send_mail
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy, reverse
+from django.views import View
 from django.views.generic import CreateView, UpdateView
 
 from sendflow.settings import EMAIL_HOST_USER
@@ -17,7 +21,7 @@ class UserCreateView(CreateView):
     """
     model = User
     form_class = UserRegisterForm
-    template_name = "users/register.html"
+    # template_name = "users/register.html"
     success_url = reverse_lazy("users:login")
 
     # def form_valid(self, form):
@@ -45,11 +49,15 @@ class UserCreateView(CreateView):
         token = secrets.token_hex(16)
         user.token = token
         user.save()
+
+        regular_user_group, created = Group.objects.get_or_create(name="regular_user")
+        user.groups.add(regular_user_group)
+
         host = self.request.get_host()
         url = f"http://{host}/users/email-confirm/{token}"
         send_mail(
             subject="Подтверждение почты",
-            message=f"Привет, перейди по ссылке, для подтверждения почты{url}",
+            message=f"Привет, перейди по ссылке, для подтверждения почты {url}",
             from_email=EMAIL_HOST_USER,
             recipient_list=[user.email],
         )
@@ -114,12 +122,12 @@ class ProfileView(LoginRequiredMixin, UpdateView):
         return self.request.user
 
 
-# class UserToggleActiveView(AuthLogin, PermissionResponseMixin, View):
-#     permission_required = "users.block_users"
-#
-#     def post(self, request, pk):
-#         user = get_object_or_404(User, pk=pk)
-#         data = json.loads(request.body)
-#         user.is_active = data["is_active"]
-#         user.save()
-#         return JsonResponse({"success": True})
+class UserToggleActiveView(LoginRequiredMixin, PermissionRequiredMixin, View):
+    permission_required = "users.block_users"
+
+    def post(self, request, pk):
+        user = get_object_or_404(User, pk=pk)
+        data = json.loads(request.body)
+        user.is_active = data["is_active"]
+        user.save()
+        return JsonResponse({"success": True})

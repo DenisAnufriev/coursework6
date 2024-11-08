@@ -104,15 +104,14 @@ def send_mailing(mailing):
         )
 
 
-
 scheduler = None
 
 
-def start():
+def start_scheduler():
     """Запускает планировщик для выполнения периодических задач."""
     global scheduler
     if scheduler is None:
         scheduler = BackgroundScheduler()
         scheduler.add_job(check_and_send_mailings, 'interval', seconds=60, id='mailing_scheduler_job')
         scheduler.start()
-        # print("scheduler start")
+        print("scheduler start")

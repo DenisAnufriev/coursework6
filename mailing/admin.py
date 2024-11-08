@@ -6,16 +6,16 @@ from mailing.models import Client, Letter, Mailing, MailingAttempt
 # Register your models here.
 @admin.register(Client)
 class ClientAdmin(admin.ModelAdmin):
-    list_display = ('id', 'email_client', 'full_name', 'comment',)
+    list_display = ('id', 'email_client', 'full_name', 'comment', 'owner',)
     list_filter = ('email_client',)
-    search_fields = ('email_client',)
+    search_fields = ('email_client', 'owner',)
 
 
 @admin.register(Letter)
 class LetterAdmin(admin.ModelAdmin):
     list_display = ('id', 'title', 'message', 'created_at', 'update_at', 'owner',)
     list_filter = ('created_at', 'update_at',)
-    search_fields = ('title', 'message',)
+    search_fields = ('title', 'message', 'owner',)
 
 
 @admin.register(Mailing)

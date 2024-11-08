@@ -1,8 +1,12 @@
+import json
+
 from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.core.cache import cache
+from django.http import JsonResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse_lazy, reverse
+from django.views import View
 from django.views.generic import CreateView, UpdateView, ListView, DetailView, DeleteView, TemplateView
 
 from blog.models import Article
@@ -52,6 +56,13 @@ class ClientCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
     permission_required = 'mailing.add_client'
     success_url = reverse_lazy('mailing:client_list')
 
+    def form_valid(self, form):
+        form.instance.owner = self.request.user
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse_lazy("mailing:client_detail", kwargs={"pk": self.object.pk})
+
 
 class ClientUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
     model = Client
@@ -61,8 +72,16 @@ class ClientUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
     success_url = reverse_lazy('mailing:client_list')
 
 
-class ClientListView(LoginRequiredMixin, ListView):
+class ClientListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
     model = Client
+    ordering = ("-id",)
+    permission_required = "mailing.view_client"
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.is_superuser:
+            return Client.objects.all()
+        return Client.objects.filter(owner=user)
 
 
 class ClientDetailView(LoginRequiredMixin, PermissionRequiredMixin, DetailView):
@@ -79,44 +98,71 @@ class ClientDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
 
 class LetterCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
     model = Letter
-    # fields = ('title', 'body')
+    # fields = ('title', 'message')
     form_class = LetterForm
     permission_required = 'mailing.add_letter'
-    success_url = reverse_lazy('mailing:letter_list')
+
+    # success_url = reverse_lazy('mailing:letter_list')
+
+    def form_valid(self, form):
+        form.instance.owner = self.request.user
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse_lazy("mailing:letter_detail", kwargs={"pk": self.object.pk})
 
 
 class LetterUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
     model = Letter
-    # fields = ('title', 'body')
+    # fields = ('title', 'message')
     form_class = LetterForm
     permission_required = 'mailing.change_letter'
 
-    # success_url = reverse_lazy('mailing:letter_list')
 
     def get_success_url(self):
-        return reverse('mailing:letter_detail', args=[self.kwargs.get('pk')])
+        return reverse_lazy('mailing:letter_detail', args=[self.kwargs.get('pk')])
 
 
-class LetterListView(LoginRequiredMixin, ListView):
+class LetterListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
     model = Letter
+    permission_required = "mailing.view_letter"
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.is_superuser:
+            return Letter.objects.all()
+        return Letter.objects.filter(owner=user)
 
 
 class LetterDetailView(LoginRequiredMixin, DetailView):
     model = Letter
+    permission_required = "mailing.view_letter"
 
 
 class LetterDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
     model = Letter
-    permission_required = 'mailing.delete_letter'
     success_url = reverse_lazy('mailing:letter_list')
+    permission_required = 'mailing.delete_letter'
 
 
-class MailingCreateView(LoginRequiredMixin, CreateView):
+class MailingCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
     model = Mailing
     # fields = ('title', 'clients', 'message')
     form_class = MailingForm
     permission_required = 'mailing.add_mailing'
-    success_url = reverse_lazy('mailing:mailing_list')
+
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["user"] = self.request.user
+        return kwargs
+
+    def form_valid(self, form):
+        form.instance.owner = self.request.user
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse_lazy("mailing:mailing_detail", kwargs={"pk": self.object.pk})
 
 
 class MailingUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
@@ -124,31 +170,43 @@ class MailingUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView)
     # fields = ('title', 'clients', 'message')
     form_class = MailingForm
     permission_required = 'mailing.change_mailing'
-    success_url = reverse_lazy('mailing:mailing_list')
+
+    # success_url = reverse_lazy('mailing:mailing_list')
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["user"] = self.request.user
+        return kwargs
+
+    def get_success_url(self):
+        return reverse_lazy("mailing:mailing_detail", kwargs={"pk": self.object.pk})
 
 
-class MailingListView(LoginRequiredMixin, ListView):
+class MailingListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
     model = Mailing
+    permission_required = "mailing.view_mailing"
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.is_superuser or user.groups.filter(name="manager").exists():
+            return Mailing.objects.all()
+        return Mailing.objects.filter(owner=user)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["title"] = "Планировщик Рассылок"
-
-        total_mailings = Mailing.objects.count()
-        context["total_mailings"] = total_mailings
-
-        active_mailings = Mailing.objects.filter(is_active=True).count()
-        context["active_mailings"] = active_mailings
-
-        unique_clients = Client.objects.distinct().count()
-        context["unique_clients"] = unique_clients
-
-        # context["random_articles"] = Article.objects.order_by("?")[:3]
+        context["title"] = "Список рассылок"
         return context
 
 
-class MailingDetailView(LoginRequiredMixin, DetailView):
+class MailingDetailView(LoginRequiredMixin, PermissionRequiredMixin, DetailView):
     model = Mailing
+    permission_required = "mailing.view_mailing"
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.is_superuser or user.groups.filter(name="manager").exists():
+            return Mailing.objects.all()
+        return Mailing.objects.filter(owner=user)
 
 
 class MailingDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
@@ -157,11 +215,17 @@ class MailingDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView)
     success_url = reverse_lazy('mailing:mailing_list')
 
 
-class MailingAttemptListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
+class MailingAttemptListView(LoginRequiredMixin, ListView):
     model = MailingAttempt
-    permission_required = 'mailing.view_attempt'
+    # permission_required = 'mailing.view_attempt'
     context_object_name = 'mailing_attempts'
     template_name = 'mailing/mailing_attempt_list.html'
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.is_superuser or user.groups.filter(name="manager").exists():
+            return Mailing.objects.all()
+        return Mailing.objects.filter(owner=user)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -173,11 +237,17 @@ class MailingAttemptListView(LoginRequiredMixin, PermissionRequiredMixin, ListVi
         return context
 
 
-class MailingAttemptDetailView(LoginRequiredMixin, PermissionRequiredMixin, DetailView):
+class MailingAttemptDetailView(LoginRequiredMixin, DetailView):
     model = MailingAttempt
-    permission_required = 'mailing.view_attempt'
+    # permission_required = 'mailing.view_attempt'
     context_object_name = 'mailing_attempt'  # имя переменной для доступа в шаблоне
     template_name = 'mailing/mailing_attempt_detail.html'
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.is_superuser or user.groups.filter(name="manager").exists():
+            return Mailing.objects.all()
+        return Mailing.objects.filter(owner=user)
 
 
 # class MailingAttemptCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
@@ -193,14 +263,25 @@ class MailingAttemptDetailView(LoginRequiredMixin, PermissionRequiredMixin, Deta
 #         return super().form_valid(form)
 
 
-@login_required
-@permission_required('mailing.view_mailing')
-def toggle_activity(request, pk):
-    mailing = get_object_or_404(Mailing, pk=pk)
-    if mailing.is_active:
-        mailing.is_active = False
-    else:
-        mailing.is_active = True
+# @login_required
+# @permission_required('mailing.view_mailing')
+# def toggle_activity(request, pk):
+#     mailing = get_object_or_404(Mailing, pk=pk)
+#     if mailing.is_active:
+#         mailing.is_active = False
+#     else:
+#         mailing.is_active = True
+#
+#     mailing.save()
+#     return redirect(reverse('mailing:index'))
 
-    mailing.save()
-    return redirect(reverse('mailing:index'))
+
+class MailingToggleActiveView(LoginRequiredMixin, PermissionRequiredMixin, View):
+    permission_required = "mailing.disable_mailing"
+
+    def post(self, request, pk):
+        mailing = get_object_or_404(Mailing, pk=pk)
+        data = json.loads(request.body)
+        mailing.is_active = data["is_active"]
+        mailing.save()
+        return JsonResponse({"success": True})

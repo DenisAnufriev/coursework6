@@ -16,7 +16,6 @@ class Client(models.Model):
     email_client = models.EmailField(
         verbose_name="электронная почта",
         help_text="Обязательно",
-        unique=True,
     )
     comment = models.TextField(
         verbose_name="Комментарий", help_text="Добавьте комментарий", **NULLABLE
@@ -34,7 +33,7 @@ class Client(models.Model):
     class Meta:
         verbose_name = "клиент"
         verbose_name_plural = "клиенты"
-        ordering = ("email_client",)
+        ordering = ("full_name",)
 
 
 class Letter(models.Model):
