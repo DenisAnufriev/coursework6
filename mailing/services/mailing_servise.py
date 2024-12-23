@@ -12,10 +12,10 @@ from mailing.models import Mailing, MailingAttempt
 def check_and_send_mailings():
     """Проверяет и отправляет активные рассылки."""
     current_time = timezone.now()
-    print(f"серверное время {current_time.strftime('%Y-%m-%d %H:%M:%S')}")
     moscow_tz = pytz.timezone('Europe/Moscow')
     moscow_time = current_time.astimezone(moscow_tz)
 
+    print(f"Серверное время {current_time.strftime('%Y-%m-%d %H:%M:%S')}")
     print("Текущее дата и время в Москве:", moscow_time.strftime('%Y-%m-%d %H:%M:%S'))
 
     # Получаем все активные и запланированные на отправку рассылки
